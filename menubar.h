@@ -3,12 +3,15 @@
 
 #include <QObject>
 #include <QMenuBar>
+#include <QFileDialog>
+#include <QMediaPlayer>
+#include <videoArea.h>
 
 class MenuBar : public QMenuBar
 {
     Q_OBJECT
 public:
-    explicit MenuBar(QWidget *parent = nullptr);
+    explicit MenuBar(QMediaPlayer *player, VideoArea *videoArea, bool *isPlaying, QWidget *parent = nullptr);
 
 private:
     QMenuBar *menuBar;
@@ -22,5 +25,10 @@ private:
             *sizeAction,
             *colorAction,
             *bkgColorAction;
+
+    QMediaPlayer *player;
+    VideoArea *videoArea;
+    bool *isPlaying;
+
 };
 #endif // MENUBAR_H

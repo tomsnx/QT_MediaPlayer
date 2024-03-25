@@ -1,19 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QToolBar>
-#include <QLabel>
-
-#include <QScrollArea>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QWidget>
-#include <QDragEnterEvent>
-#include <QMimeData>
-
-#include <dropArea.h>
-#include <menubar.h>
-#include <sidebar.h>
-#include <playerbar.h>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -22,40 +8,65 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     int buttonSize = 30;
     QSize iconSize(buttonSize - 10, buttonSize - 10);
 
+    player = new QMediaPlayer(this);
+    videoArea = new VideoArea(this);
+    sideBar = new SideBar(this);
+    isPlaying = false;
+
     // Menu Bar
-    MenuBar *menuBar = new MenuBar(this);
+    menuBar = new MenuBar(player, videoArea, &isPlaying, this);
     this->setMenuBar(menuBar);
 
     // Player Bar
-    int statusBarHeight = 40;
-    PlayerBar *playerBar = new PlayerBar(statusBarHeight, this);
-    statusBar()->setStyleSheet("QStatusBar::item { border: 0; padding: 0; margin: 0; }");
-    statusBar()->setSizeGripEnabled(false);
-    statusBar()->addWidget(playerBar);
+    int statusBarHeight = 35;
+    playerBar = new PlayerBar(statusBarHeight, player, videoArea, sideBar, &isPlaying, this);
 
-    // Two sides of window
-    SideBar *sideBar = new SideBar(this);
-    DropArea *dropArea = new DropArea(this);
+    mainWindowVBox = new QVBoxLayout(this);
+    mainWindowVBox->setContentsMargins(QMargins(0,0,0,0));
+    mainWindowVBox->setSpacing(0);
 
     // Splitter
-    QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
+    splitter = new QSplitter(Qt::Horizontal, this);
     splitter->addWidget(sideBar);
-    splitter->addWidget(dropArea);
+    splitter->addWidget(videoArea);
 
     splitter->setCollapsible(0, true);
     splitter->setHandleWidth(5);
     splitter->setStyleSheet("QSplitter::handle {"
                             "background-color: #000000;"
+                            "border-bottom: 2px solid black;"
                             "}");
 
-    setCentralWidget(splitter);
+    mainWindowVBox->addWidget(splitter);
+    mainWindowVBox->addWidget(playerBar);
+
+    videoArea->setMediaPlayer(player);
+
+    containerWidget = new QWidget;
+    containerWidget->setLayout(mainWindowVBox);
+
+    setCentralWidget(containerWidget);
 
     QList<int> sizes;
     sizes << 100 << width() - 100;
     splitter->setSizes(sizes);
+
+    connect(videoArea, &VideoArea::fileDropped, this, &MainWindow::playVideo);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::playVideo(const QString &filePath) {
+    player->setSource(QUrl::fromLocalFile(filePath));
+    videoArea->showVideo(true);
+    sideBar->setVisible(false);
+
+    player->play();
+    isPlaying = true;
+
+    playerBar->updatePlayerButton(&isPlaying);
+    playerBar->updateStopButton(&isPlaying);
 }

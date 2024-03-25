@@ -17,6 +17,22 @@
 #include <QStandardItemModel>
 #include <QSplitter>
 #include <QHeaderView>
+#include <QMediaPlayer>
+#include <QVideoWidget>
+#include <QToolBar>
+#include <QLabel>
+
+#include <QScrollArea>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QWidget>
+#include <QDragEnterEvent>
+#include <QMimeData>
+
+#include <videoArea.h>
+#include <menubar.h>
+#include <sidebar.h>
+#include <playerbar.h>
 
 #include <menubar.h>
 
@@ -45,12 +61,25 @@ private:
     void onPreviousButtonClicked();
     void onProgressSliderMoved(int position);
 
+    void playVideo(const QString &filePath);
+
+    SideBar *sideBar;
+    MenuBar *menubar;
+    PlayerBar *playerBar;
+    QVideoWidget *videoWidget;
+    QMediaPlayer *player;
+    VideoArea *videoArea;
     Ui::MainWindow *ui;
     MenuBar *menuBar;
     QDockWidget *sideBarDock;
     QHBoxLayout *hboxButtons;
+    QVBoxLayout *mainWindowVBox;
     QSlider *progressSlider, *soundSlider;
     QPushButton *playPauseButton, *pauseButton, *stopButton, *nextButton, *previousButton, *fullScreenButton;
     QLabel *currentTimeLabel, *totalTimeLabel;
+    QSplitter *splitter;
+    QWidget *containerWidget;
+
+    bool isPlaying;
 };
 #endif // MAINWINDOW_H
