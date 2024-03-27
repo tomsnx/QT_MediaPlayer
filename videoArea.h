@@ -31,7 +31,8 @@ private slots:
     void dropEvent(QDropEvent *event);
 
 private:
-
+    void showPlaylistContextMenu(const QPoint &pos);
+    void copyItemToMediaLibrary(QTableWidgetItem *item);
 
 protected:
     QMediaPlayer *player;

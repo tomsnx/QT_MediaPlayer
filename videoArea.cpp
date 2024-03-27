@@ -9,6 +9,9 @@ VideoArea::VideoArea(QWidget *parent) : QWidget(parent) {
     playlistWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     playlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
 
+    playlistWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(playlistWidget, &QWidget::customContextMenuRequested, this, &VideoArea::showPlaylistContextMenu);
+
     connect(playlistWidget, &QTableWidget::itemSelectionChanged, [this]() {
         auto selectedItems = playlistWidget->selectedItems();
         if (!selectedItems.isEmpty()) {
@@ -142,4 +145,46 @@ void VideoArea::showVideo(bool var) {
         playlistWidget->show();
         dropMessageLabel->show();
     }
+}
+
+void VideoArea::showPlaylistContextMenu(const QPoint &pos) {
+    // Trouver l'élément sur lequel le clic droit a été effectué
+    QTableWidgetItem *item = playlistWidget->itemAt(pos);
+    if (!item) return;
+
+    // Créer le menu contextuel
+    QMenu contextMenu(tr("Context menu"), this);
+
+    // Ajouter l'action de copie
+    QAction copyAction("Copy to Media Library", this);
+    connect(&copyAction, &QAction::triggered, [this, item]() {
+        // Copier l'élément dans mediaLibraryWidget
+        copyItemToMediaLibrary(item);
+    });
+    contextMenu.addAction(&copyAction);
+
+    QAction *removeAction = contextMenu.addAction("Delete");
+    connect(removeAction, &QAction::triggered, [this, item]() {
+        // Supprimer l'élément de playlistWidget
+        playlistWidget->removeRow(item->row());
+    });
+
+    // Afficher le menu contextuel
+    contextMenu.exec(playlistWidget->viewport()->mapToGlobal(pos));
+}
+
+void VideoArea::copyItemToMediaLibrary(QTableWidgetItem *item) {
+    int row = item->row();
+
+    // Supposons que la colonne 0 contient le titre, 1 l'auteur, 2 la durée
+    QString title = playlistWidget->item(row, 0)->text();
+    QString author = playlistWidget->item(row, 1)->text();
+    QString duration = playlistWidget->item(row, 2)->text();
+
+    // Ajouter ces informations à mediaLibraryWidget
+    int newRow = mediaLibraryWidget->rowCount();
+    mediaLibraryWidget->insertRow(newRow);
+    mediaLibraryWidget->setItem(newRow, 0, new QTableWidgetItem(title));
+    mediaLibraryWidget->setItem(newRow, 1, new QTableWidgetItem(author));
+    mediaLibraryWidget->setItem(newRow, 2, new QTableWidgetItem(duration));
 }
