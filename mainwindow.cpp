@@ -10,8 +10,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     player = new QMediaPlayer(this);
     videoArea = new VideoArea(this);
-    sideBar = new SideBar(this);
+    sideBar = new SideBar(videoArea, this);
     isPlaying = false;
+
+    //sideBar->hide();
+    sideBar->setMaximumWidth(300);
 
     // Menu Bar
     menuBar = new MenuBar(player, videoArea, &isPlaying, this);
@@ -30,15 +33,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     splitter->addWidget(sideBar);
     splitter->addWidget(videoArea);
 
-    splitter->setCollapsible(0, true);
-    splitter->setHandleWidth(5);
-    splitter->setStyleSheet("QSplitter::handle {"
-                            "background-color: #000000;"
-                            "border-bottom: 2px solid black;"
-                            "}");
+    splitter->setChildrenCollapsible(true);
+    splitter->setHandleWidth(1);
+    splitter->setStretchFactor(1, 1);
 
     mainWindowVBox->addWidget(splitter);
     mainWindowVBox->addWidget(playerBar);
+
+    mainWindowVBox->setContentsMargins(0, 0, 0, 0);
 
     videoArea->setMediaPlayer(player);
 
@@ -48,10 +50,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setCentralWidget(containerWidget);
 
     QList<int> sizes;
-    sizes << 100 << width() - 100;
+    sizes << 170 << width() - 100;
     splitter->setSizes(sizes);
+    splitter->setHandleWidth(1);
+    //TODO: Faire en sorte que quand on ferme le splitter a gauche
+    // on puisse le réouvrir.
 
     connect(videoArea, &VideoArea::fileDropped, this, &MainWindow::playVideo);
+
+    qApp->setStyleSheet(R"(
+        QSplitter::handle {
+            background: #c0c0c0;
+        }
+    )");
+
 }
 
 MainWindow::~MainWindow()
@@ -68,5 +80,4 @@ void MainWindow::playVideo(const QString &filePath) {
     isPlaying = true;
 
     playerBar->updatePlayerButton(&isPlaying);
-    playerBar->updateStopButton(&isPlaying);
 }

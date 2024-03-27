@@ -10,76 +10,23 @@ PlayerBar::PlayerBar(int height, QMediaPlayer *player, VideoArea *VideoArea, Sid
     userIsInteractingWithSlider = false;
     isStoped = false;
 
-    this->setFixedHeight(height);
-    this->setContentsMargins(QMargins(0,0,0,0));
+    this->setupBarLook(height);
 
-    QSize *buttonSize = new QSize(30, 30);
-
-    audioOutput = new QAudioOutput(this);
-    player->setAudioOutput(audioOutput);
-    audioOutput->setVolume(0.5);
+    this->setupAudio();
 
     this->initStyles();
     this->initPlayerButtons(*buttonSize);
     this->initProgressBar();
     this->initSoundSettings();
 
-    fullScreenButton = new Button(*buttonSize,
-                            style()->standardIcon(QStyle::SP_TitleBarMaxButton),
-                            this);
+    this->initFullScreenButton();
 
-    QObject::connect(fullScreenButton, &QPushButton::clicked, this, [this]() {
-        QWidget *mainWindow = this->window();
-        if (mainWindow->isMaximized()) {
-            mainWindow->showNormal();
-        } else {
-            mainWindow->showMaximized();
-        }
-    });
+    this->setupPlayerInteractions();
 
-    //Media Player Settings
-    QObject::connect(player, &QMediaPlayer::positionChanged, this, [this, player](qint64 position) {
-        if (!userIsInteractingWithSlider) {
-            progressSlider->setSliderPosition(static_cast<int>((static_cast<double>(position) / player->duration()) * 100));
-            currentTimeLabel->setText(formatTime(position));
-        }
-    });
-
-    // Connecter le signal durationChanged à une lambda pour mettre à jour le temps total
-    QObject::connect(player, &QMediaPlayer::durationChanged, this, [this](qint64 duration) {
-        totalTimeLabel->setText(formatTime(duration));
-    });
 
     this->initLayouts();
 
     setLayout(globalLayout);
-}
-
-void PlayerBar::initStyles() {
-    sliderStyle = new QString(R"(
-        QSlider::groove:horizontal {
-            border: 1px solid #999999;
-            height: 8px; /* the height of the groove */
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #b1b1b1, stop:1 #c4c4c4);
-            margin: 2px 0;
-            border-radius: 3px;
-        }
-
-        QSlider::handle:horizontal {
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #dcdcdc);
-            border: 1px solid #5c5c5c;
-            width: 18px;
-            margin: -4px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
-            border-radius: 3px;
-        }
-
-        QSlider::sub-page:horizontal {
-            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5DCCFF, stop: 1 #1874CD);
-            border: 1px solid #777;
-            height: 10px;
-            border-radius: 3px;
-        }
-    )");
 }
 
 void PlayerBar::initPlayerButtons(QSize &buttonsSize)
@@ -119,9 +66,11 @@ void PlayerBar::initPlayerButtons(QSize &buttonsSize)
         isStoped = !isStoped;
         player->stop();
         videoArea->videoWidget->hide();
+        videoArea->playlistWidget->show();
         sideBar->setVisible(true);
         updatePlayerButton(isPlaying);
         progressSlider->setEnabled(false);
+        totalTimeLabel->setText("00:00");
 
         initPlayPauseButton();
     });
@@ -142,13 +91,11 @@ void PlayerBar::initProgressBar()
         userIsInteractingWithSlider = true;
     });
 
-    // Signal pour définir la position lorsque l'utilisateur déplace le slider
     QObject::connect(progressSlider, &QSlider::sliderMoved, this, [this](int position) {
         qint64 videoPosition = static_cast<qint64>((position / 100.0) * player->duration());
         currentTimeLabel->setText(formatTime(videoPosition));
     });
 
-    // Signal pour relancer la mise à jour automatique et ajuster la position de la vidéo lorsque l'utilisateur relâche le slider
     QObject::connect(progressSlider, &QSlider::sliderReleased, this, [this]() {
         qint64 videoPosition = static_cast<qint64>((progressSlider->value() / 100.0) * player->duration());
         player->setPosition(videoPosition);
@@ -182,25 +129,50 @@ void PlayerBar::initSoundSettings()
 
 void PlayerBar::initLayouts()
 {
+    QVBoxLayout *buttonLayout = new QVBoxLayout();
+    buttonLayout->addSpacing(6);
+    buttonLayout->addLayout(playButtonLayout);
+
+    QVBoxLayout *stopButtonLayout = new QVBoxLayout();
+    stopButtonLayout->addSpacing(6);
+    stopButtonLayout->addWidget(stopButton);
+
     playerLayout = new QHBoxLayout();
-    playerLayout->addLayout(playButtonLayout);
-    playerLayout->addWidget(stopButton);
+    playerLayout->addLayout(buttonLayout);
+    playerLayout->addLayout(stopButtonLayout);
+    playerLayout->setContentsMargins(0, 6, 0, 0);
 
     progressLayout = new QHBoxLayout();
     progressLayout->addWidget(currentTimeLabel);
     progressLayout->addWidget(progressSlider);
     progressLayout->addWidget(totalTimeLabel);
 
+    QVBoxLayout *progressBarPaddingLayout = new QVBoxLayout();
+    progressBarPaddingLayout->addSpacing(4);
+    progressBarPaddingLayout->addLayout(progressLayout);
+
     playerLayout->setContentsMargins(0, 0, 0, 0);
     progressLayout->setContentsMargins(0, 0, 0, 0);
+
+    QVBoxLayout *fullScreenButtonLayout = new QVBoxLayout();
+    fullScreenButtonLayout->addSpacing(6);
+    fullScreenButtonLayout->addWidget(fullScreenButton);
+
+    QVBoxLayout *volumeMutedButtonLayout = new QVBoxLayout();
+    volumeMutedButtonLayout->addSpacing(6);
+    volumeMutedButtonLayout->addWidget(volumeMuted);
+
+    QVBoxLayout *soundSliderButtonLayout = new QVBoxLayout();
+    soundSliderButtonLayout->addSpacing(6);
+    soundSliderButtonLayout->addWidget(soundSlider);
 
     globalLayout = new QHBoxLayout();
     globalLayout->setContentsMargins(0, 0, 0, 0);
     globalLayout->addLayout(playerLayout);
-    globalLayout->addLayout(progressLayout);
-    globalLayout->addWidget(volumeMuted);
-    globalLayout->addWidget(soundSlider);
-    globalLayout->addWidget(fullScreenButton);
+    globalLayout->addLayout(progressBarPaddingLayout);
+    globalLayout->addLayout(volumeMutedButtonLayout);
+    globalLayout->addLayout(soundSliderButtonLayout);
+    globalLayout->addLayout(fullScreenButtonLayout);
 }
 
 void PlayerBar::updatePlayerButton(bool *isPlaying)
@@ -229,22 +201,34 @@ void PlayerBar::updatePlayerButton(bool *isPlaying)
     }
 }
 
-void PlayerBar::updateStopButton(bool *isPlaying)
-{
-
-}
-
 void PlayerBar::initPlayPauseButton()
 {
     QObject::disconnect(playPauseButton, &QPushButton::clicked, this, nullptr);
     QObject::connect(playPauseButton, &QPushButton::clicked, this, [this]() {
-        QString fileName = QFileDialog:: getOpenFileName(this,tr("Select Video File"),"",tr("MP4 Files (*.MP4)")) ;
-        if (!fileName.isEmpty()) {
-            player->setSource(QUrl::fromLocalFile(fileName));
+        QString filePath = QFileDialog:: getOpenFileName(this,tr("Select Video File"),"",tr("MP4 Files (*.MP4 *.mkv *.avi)")) ;
+        if (!filePath.isEmpty()) {
+            player->setSource(QUrl::fromLocalFile(filePath));
             videoArea->showVideo(true);
             player->play();
             *isPlaying = true;
             updatePlayerButton(isPlaying);
+            videoArea->addToPlaylist(filePath);
+        }
+    });
+}
+
+void PlayerBar::initFullScreenButton()
+{
+    fullScreenButton = new Button(*buttonSize,
+                                  style()->standardIcon(QStyle::SP_TitleBarMaxButton),
+                                  this);
+
+    QObject::connect(fullScreenButton, &QPushButton::clicked, this, [this]() {
+        QWidget *mainWindow = this->window();
+        if (mainWindow->isMaximized()) {
+            mainWindow->showNormal();
+        } else {
+            mainWindow->showMaximized();
         }
     });
 }
@@ -258,7 +242,78 @@ QString PlayerBar::formatTime(qint64 timeMilliSeconds) {
     return time.toString(hours > 0 ? "hh:mm:ss" : "mm:ss");
 }
 
-// Implementation of slots
-void PlayerBar::onProgressSliderMoved(int position) {
-    // Slot implementation
+/**
+ * Setup the look of the bar.
+ * @brief PlayerBar::setupBarLook
+ */
+void PlayerBar::setupBarLook(int height)
+{
+    this->setFixedHeight(height);
+    this->setContentsMargins(QMargins(20,0,20,10));
+    buttonSize = new QSize(40, 25);
+
+    this->setAttribute(Qt::WA_StyledBackground, true);
+    this->setStyleSheet(R"(
+        QPushButton {
+            background-color: #f0f0f0;
+            border: 1px solid #dcdcdc;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #e0e0e0;
+        }
+        QPushButton:pressed {
+            background-color: #c0c0c0;
+        }
+    )");
+}
+
+void PlayerBar::setupAudio()
+{
+    audioOutput = new QAudioOutput(this);
+    player->setAudioOutput(audioOutput);
+    audioOutput->setVolume(0.5);
+}
+
+void PlayerBar::setupPlayerInteractions()
+{
+    //Media Player Settings
+    QObject::connect(player, &QMediaPlayer::positionChanged, this, [this](qint64 position) {
+        if (!userIsInteractingWithSlider) {
+            progressSlider->setSliderPosition(static_cast<int>((static_cast<double>(position) / player->duration()) * 100));
+            currentTimeLabel->setText(formatTime(position));
+        }
+    });
+
+    // Connecter le signal durationChanged à une lambda pour mettre à jour le temps total
+    QObject::connect(player, &QMediaPlayer::durationChanged, this, [this](qint64 duration) {
+        totalTimeLabel->setText(formatTime(duration));
+    });
+}
+
+void PlayerBar::initStyles() {
+    sliderStyle = new QString(R"(
+        QSlider::groove:horizontal {
+            border: 1px solid #999999;
+            height: 8px;
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #b1b1b1, stop:1 #c4c4c4);
+            margin: 2px 0;
+            border-radius: 3px;
+        }
+
+        QSlider::handle:horizontal {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #dcdcdc);
+            border: 1px solid #5c5c5c;
+            width: 18px;
+            margin: -4px 0;
+            border-radius: 3px;
+        }
+
+        QSlider::sub-page:horizontal {
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5DCCFF, stop: 1 #1874CD);
+            border: 1px solid #777;
+            height: 10px;
+            border-radius: 3px;
+        }
+    )");
 }

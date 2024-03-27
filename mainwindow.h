@@ -50,6 +50,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+
+
 private:
     void onStatusButtonClicked();
     void onStatusSliderValueChanged(int value);

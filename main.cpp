@@ -22,5 +22,6 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.setWindowIcon(appIcon);
     w.show();
+
     return app.exec();
 }

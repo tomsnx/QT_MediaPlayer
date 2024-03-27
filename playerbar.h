@@ -19,10 +19,6 @@ public:
     explicit PlayerBar(int height, QMediaPlayer *player, VideoArea *videoArea, SideBar *sideBar, bool *isPlaying, QWidget *parent = nullptr);
 
     void updatePlayerButton(bool *isPLaying);
-    void updateStopButton(bool *isPLaying);
-
-private slots:
-    void onProgressSliderMoved(int position);
 
 private:
     int height;
@@ -43,6 +39,7 @@ private:
     VideoArea *videoArea;
     SideBar *sideBar;
     QAudioOutput *audioOutput;
+    QSize *buttonSize;
 
     QString formatTime(qint64 timeMilliSeconds);
 
@@ -57,6 +54,11 @@ private:
     void initLayouts();
 
     void initPlayPauseButton();
+    void initFullScreenButton();
+
+    void setupBarLook(int height);
+    void setupAudio();
+    void setupPlayerInteractions();
 };
 
 #endif // PLAYERBAR_H
