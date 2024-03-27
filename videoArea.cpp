@@ -3,28 +3,15 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
-VideoArea::VideoArea(QWidget *parent) : QWidget(parent) {
+VideoArea::VideoArea(QMediaPlayer *player, QWidget *parent) : QWidget(parent) {
     videoWidget = new QVideoWidget(this);
+    this->player = player;
     playlistWidget = new QTableWidget(this);
     playlistWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     playlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
 
     playlistWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(playlistWidget, &QWidget::customContextMenuRequested, this, &VideoArea::showPlaylistContextMenu);
-
-    connect(playlistWidget, &QTableWidget::itemSelectionChanged, [this]() {
-        auto selectedItems = playlistWidget->selectedItems();
-        if (!selectedItems.isEmpty()) {
-            // Obtenez l'élément de la première colonne de la ligne sélectionnée, qui contient le chemin du fichier
-            QTableWidgetItem *item = selectedItems.first();
-            int row = item->row();
-            QString filePath = playlistWidget->item(row, 0)->text(); // Mettez 0 si le chemin est dans la première colonne
-
-            /*player->setSource(QUrl::fromLocalFile(filePath));
-            showVideo(true);
-            player->play();*/
-        }
-    });
 
     // Configurez tableWidget ici
     playlistWidget->setColumnCount(3);
@@ -89,6 +76,8 @@ VideoArea::VideoArea(QWidget *parent) : QWidget(parent) {
     layout->addWidget(mediaLibraryWidget);    // Ajoutez le tableWidget au layout
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
+
+    connect(playlistWidget, &QTableWidget::itemDoubleClicked, this, &VideoArea::playVideoFromPlaylist);
 }
 
 void VideoArea::dragEnterEvent(QDragEnterEvent *event) {
@@ -120,14 +109,42 @@ void VideoArea::dropEvent(QDropEvent *event) {
 void VideoArea::addToPlaylist(const QString &filePath) {
     QFileInfo fileInfo(filePath);
     QString title = fileInfo.completeBaseName();
-    QString duration = "--:--";
 
+    // Ajoutez une nouvelle ligne au widget de la playlist pour le fichier
     int currentRow = playlistWidget->rowCount();
     playlistWidget->insertRow(currentRow);
 
+    // Définissez le titre et des placeholders pour l'auteur et la durée
     playlistWidget->setItem(currentRow, 0, new QTableWidgetItem(title));
-    playlistWidget->setItem(currentRow, 1, new QTableWidgetItem("Author")); // Mettez à jour avec la vraie valeur
-    playlistWidget->setItem(currentRow, 2, new QTableWidgetItem(duration));
+    playlistWidget->setItem(currentRow, 1, new QTableWidgetItem("Author")); // Placeholder pour l'auteur
+    playlistWidget->setItem(currentRow, 2, new QTableWidgetItem("--:--")); // Placeholder pour la durée
+
+    // Mise à jour de la map pour garder la trace du chemin du fichier
+    videoPathMap[title] = filePath;
+
+    // Créez un nouveau lecteur multimédia pour récupérer la durée et d'autres métadonnées
+    QMediaPlayer *tempPlayer = new QMediaPlayer;
+    tempPlayer->setSource(QUrl::fromLocalFile(filePath));
+
+    //FIXME: A terme faire ça pour récupérer les métadonnées: utilisation d'une bibliothèque tierce comme FFmpeg (via libavformat et libavcodec)
+    connect(tempPlayer, &QMediaPlayer::mediaStatusChanged, this, [this, tempPlayer, currentRow](QMediaPlayer::MediaStatus status) mutable {
+        if (status == QMediaPlayer::LoadedMedia) {
+            qint64 duration = tempPlayer->duration();
+            QString durationStr = QTime(0, 0, 0).addMSecs(duration).toString("hh:mm:ss");
+
+            // Extraction directe des métadonnées sans vérifier isMetaDataAvailable
+            QString author = tempPlayer->metaData().metaDataKeyToString(QMediaMetaData::Author);
+            if (author.isEmpty()) {
+                author = tempPlayer->metaData().metaDataKeyToString(QMediaMetaData::ContributingArtist);
+            }
+
+            playlistWidget->item(currentRow, 2)->setText(durationStr);
+            playlistWidget->item(currentRow, 1)->setText(!author.isEmpty() ? author : "Unknown");
+
+            tempPlayer->deleteLater(); // Libérer la ressource tempPlayer
+        }
+    });
+    tempPlayer->play();
 }
 
 void VideoArea::setMediaPlayer(QMediaPlayer *player) {
@@ -144,6 +161,17 @@ void VideoArea::showVideo(bool var) {
         videoWidget->hide();
         playlistWidget->show();
         dropMessageLabel->show();
+    }
+}
+
+void VideoArea::playVideoFromPlaylist(QTableWidgetItem *item) {
+    int row = item->row();
+    QString title = playlistWidget->item(row, 0)->text();
+
+    QString filePath = videoPathMap.value(title);
+    if (!filePath.isEmpty()) {
+        playlistWidget->hide();
+        emit itemClicked(filePath);
     }
 }
 

@@ -71,6 +71,7 @@ void PlayerBar::initPlayerButtons(QSize &buttonsSize)
         updatePlayerButton(isPlaying);
         progressSlider->setEnabled(false);
         totalTimeLabel->setText("00:00");
+        stopButton->setEnabled(false);
 
         initPlayPauseButton();
     });
@@ -209,6 +210,7 @@ void PlayerBar::initPlayPauseButton()
         if (!filePath.isEmpty()) {
             player->setSource(QUrl::fromLocalFile(filePath));
             videoArea->showVideo(true);
+            sideBar->hide();
             player->play();
             *isPlaying = true;
             updatePlayerButton(isPlaying);

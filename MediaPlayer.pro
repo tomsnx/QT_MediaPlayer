@@ -47,4 +47,3 @@ RESOURCES += \
     resources.qrc
 
 ICON = mediaplayer.icns
-QMAKE_INFO_PLIST = Info.plist

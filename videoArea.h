@@ -13,11 +13,13 @@
 
 class VideoArea : public QWidget {
     Q_OBJECT
+
 signals:
     void fileDropped(const QString &filePath);
+    void itemClicked(const QString &filePath);
 
 public:
-    explicit VideoArea(QWidget *parent = nullptr);
+    explicit VideoArea(QMediaPlayer *player, QWidget *parent = nullptr);
     void setMediaPlayer(QMediaPlayer *player);
     void showVideo(bool);
     void addToPlaylist(const QString &filePath);
@@ -29,10 +31,13 @@ public:
 private slots:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
+    void playVideoFromPlaylist(QTableWidgetItem *item);
 
 private:
     void showPlaylistContextMenu(const QPoint &pos);
     void copyItemToMediaLibrary(QTableWidgetItem *item);
+
+    QMap<QString, QString> videoPathMap;
 
 protected:
     QMediaPlayer *player;

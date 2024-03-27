@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QSize iconSize(buttonSize - 10, buttonSize - 10);
 
     player = new QMediaPlayer(this);
-    videoArea = new VideoArea(this);
+    videoArea = new VideoArea(player, this);
     sideBar = new SideBar(videoArea, this);
     isPlaying = false;
 
@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     //TODO: Faire en sorte que quand on ferme le splitter a gauche
     // on puisse le réouvrir.
 
+    connect(videoArea, &VideoArea::itemClicked, this, &MainWindow::playVideo);
     connect(videoArea, &VideoArea::fileDropped, this, &MainWindow::playVideo);
 
     qApp->setStyleSheet(R"(
