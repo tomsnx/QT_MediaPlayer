@@ -84,7 +84,10 @@ void CustomTable::onCustomContextMenuRequested(const QPoint &pos) {
 
         connect(addAction, &QAction::triggered, this, [this]() {
             QString filePath = QFileDialog:: getOpenFileName(this,tr("Select Video File"),"",tr("MP4 Files (*.MP4 *.mkv *.avi)"));
-            addToTable(filePath);
+            if(!filePath.isEmpty())
+            {
+                addToTable(filePath);
+            }
         });
     } else {
 

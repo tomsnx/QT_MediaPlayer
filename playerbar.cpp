@@ -214,7 +214,7 @@ void PlayerBar::initPlayPauseButton()
             player->play();
             *isPlaying = true;
             updatePlayerButton(isPlaying);
-            //videoArea->addToPlaylist(filePath);
+            videoArea->playlistWidget->addToTable(filePath);
         }
     });
 }
