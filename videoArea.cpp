@@ -9,6 +9,8 @@ VideoArea::VideoArea(QMediaPlayer *player, QWidget *parent) : QWidget(parent) {
     playlistWidget = new CustomTable(QString("Playlist"), this);
     mediaLibraryWidget = new CustomTable(QString("Media Library"), this);
 
+    mediaLibraryWidget->loadFromJSON("mediaLibrary.json");
+
     myVideosWidget = new CustomTable(QString("My Videos"), this);
     musicWidget = new CustomTable(QString("My Music"), this);
 
@@ -92,15 +94,10 @@ void VideoArea::playVideo(QString filePath) {
 }
 
 void VideoArea::copyItemToMediaLibrary(QTableWidgetItem *item) {
-    int row = item->row();
+    QString title = item->text();
+    QString filePath = playlistWidget->videoPathMap->value(title);
 
-    QString title = playlistWidget->tableWidget->item(row, 0)->text();
-    QString author = playlistWidget->tableWidget->item(row, 1)->text();
-    QString duration = playlistWidget->tableWidget->item(row, 2)->text();
-
-    int newRow = mediaLibraryWidget->tableWidget->rowCount();
-    mediaLibraryWidget->tableWidget->insertRow(newRow);
-    mediaLibraryWidget->tableWidget->setItem(newRow, 0, new QTableWidgetItem(title));
-    mediaLibraryWidget->tableWidget->setItem(newRow, 1, new QTableWidgetItem(author));
-    mediaLibraryWidget->tableWidget->setItem(newRow, 2, new QTableWidgetItem(duration));
+    if (!filePath.isEmpty()) {
+        mediaLibraryWidget->addToTable(filePath);
+    }
 }

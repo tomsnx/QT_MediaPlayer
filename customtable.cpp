@@ -101,6 +101,9 @@ void CustomTable::onCustomContextMenuRequested(const QPoint &pos) {
         QAction* deleteAction = contextMenu.addAction(tr("Supprimer"));
         connect(deleteAction, &QAction::triggered, this, [this, item]() {
             int row = tableWidget->row(item);
+            QString title = this->tableWidget->item(row, 0)->text();
+
+            videoPathMap->remove(title);
             tableWidget->removeRow(row);
         });
     }
@@ -143,6 +146,52 @@ void CustomTable::addToTable(const QString &filePath)
         }
     });
     tempPlayer->play();
+}
+
+void CustomTable::saveToJSON(const QString &filename) {
+    QString dataPath = QCoreApplication::applicationDirPath();
+    QDir dir(dataPath);
+
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    QString filePath = dir.filePath(filename);
+
+    QJsonObject json;
+    for (auto it = videoPathMap->constBegin(); it != videoPathMap->constEnd(); ++it) {
+        json[it.key()] = it.value();
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "Impossible d'ouvrir le fichier pour l'écriture:" << filePath;
+        return;
+    }
+
+    file.write(QJsonDocument(json).toJson());
+    file.close();
+}
+
+void CustomTable::loadFromJSON(const QString &filename) {
+    QString dataPath = QCoreApplication::applicationDirPath();
+    QString filePath = dataPath + "/" + filename;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "Impossible d'ouvrir le fichier pour la lecture:" << filePath;
+        return;
+    }
+
+    QJsonObject json = QJsonDocument::fromJson(file.readAll()).object();
+    file.close();
+
+    // À ce stade, vous devrez nettoyer la liste actuelle si nécessaire,
+    // et puis parcourir le json pour ajouter des éléments à votre liste/table
+    for (auto it = json.constBegin(); it != json.constEnd(); ++it) {
+        // Utilisez it.key() et it.value().toString() pour récupérer vos données et les ajouter à votre tableau
+        addToTable(it.value().toString());
+    }
 }
 
 CustomTable::~CustomTable() {

@@ -29,7 +29,10 @@ public:
     QTableWidget *tableWidget;
     QMap<QString, QString> *videoPathMap;
 
+    void saveToJSON(const QString &filename);
+    void loadFromJSON(const QString &filename);
     void addToTable(const QString &filePath);
+
     ~CustomTable();
 
 private:
@@ -40,7 +43,6 @@ private:
 private slots:
     void onItemDoubleClicked(QTableWidgetItem *item);
     void onCustomContextMenuRequested(const QPoint &pos);
-
 };
 
 #endif // CUSTOMTABLE_H

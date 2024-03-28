@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     QIcon appIcon(":/icons/mediaplayer.icns");
+    QApplication::setWindowIcon(QIcon(":/icons/mediaplayer.icns"));
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

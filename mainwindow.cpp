@@ -82,3 +82,8 @@ void MainWindow::playVideo(const QString &filePath) {
 
     playerBar->updatePlayerButton(&isPlaying);
 }
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    videoArea->mediaLibraryWidget->saveToJSON("mediaLibrary.json");
+    QMainWindow::closeEvent(event);
+}
