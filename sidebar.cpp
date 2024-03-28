@@ -100,16 +100,24 @@ void SideBar::handleSelectionChanged(QListWidgetItem *current, QListWidgetItem *
     videoArea->playlistWidget->hide();
     videoArea->mediaLibraryWidget->hide();
     videoArea->dropMessageLabel->hide();
+    videoArea->myVideosWidget->hide();
+    videoArea->musicWidget->hide();
 
     // Affichez le widget approprié en fonction de l'élément sélectionné
     if (current->text() == "Playlist") {
-        if (videoArea->playlistWidget->rowCount() == 0) {
+        if (videoArea->playlistWidget->tableWidget->rowCount() == 0) {
             videoArea->dropMessageLabel->show();
         } else {
             videoArea->playlistWidget->show();
         }
     } else if (current->text() == "Media Library") {
         videoArea->mediaLibraryWidget->show();
+    }
+    else if (current->text() == "My Videos") {
+        videoArea->myVideosWidget->show();
+    }
+    else {
+        videoArea->musicWidget->show();
     }
     // Ajoutez des conditions supplémentaires pour les autres éléments si nécessaire
 }

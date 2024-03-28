@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
         }
     }
     MainWindow w;
+    w.setWindowTitle("Media Player");
     w.setWindowIcon(appIcon);
     w.show();
 

@@ -10,7 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     button.cpp \
-    customsplitterhandle.cpp \
+    customtable.cpp \
     videoArea.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -20,7 +20,7 @@ SOURCES += \
 
 HEADERS += \
     button.h \
-    customsplitterhandle.h \
+    customtable.h \
     videoArea.h \
     mainwindow.h \
     menubar.h \
