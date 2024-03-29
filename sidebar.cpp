@@ -1,4 +1,4 @@
-#include "sideBar.h"
+#include "sidebar.h"
 
 SideBar::SideBar(VideoArea *videoArea, QWidget *parent) : QWidget(parent) {
     layout = new QVBoxLayout(this);

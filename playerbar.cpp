@@ -1,4 +1,4 @@
-#include "playerBar.h"
+#include "playerbar.h"
 #include <button.h>
 
 PlayerBar::PlayerBar(int height, QMediaPlayer *player, VideoArea *VideoArea, SideBar *sideBar, bool *isPlaying, QWidget *parent) : QWidget(parent) {
