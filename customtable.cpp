@@ -45,6 +45,13 @@ CustomTable::CustomTable(const QString &title, QWidget *parent) : QWidget(parent
     connect(tableWidget, &QTableWidget::itemDoubleClicked, this, &CustomTable::onItemDoubleClicked);
     connect(tableWidget, &QTableWidget::customContextMenuRequested, this, &CustomTable::onCustomContextMenuRequested);
 
+    setupEventFilter();
+
+    if(title == "My Videos")
+    {
+        loadVideosFromFolder();
+    }
+
     this->hide();
 }
 
@@ -82,18 +89,21 @@ void CustomTable::onCustomContextMenuRequested(const QPoint &pos) {
                             )");
 
     if (!item) {
-        QAction* addAction = contextMenu.addAction(tr("Ajouter un nouvel élément"));
+        if(this->title != "My Videos" && this->title != "My Music")
+        {
+            QAction* addAction = contextMenu.addAction(tr("Ajouter un nouvel élément"));
 
-        connect(addAction, &QAction::triggered, this, [this]() {
-            QString filePath = QFileDialog:: getOpenFileName(this,tr("Select Video File"),"",tr("MP4 Files (*.MP4 *.mkv *.avi)"));
-            if(!filePath.isEmpty())
-            {
-                addToTable(filePath);
-            }
-        });
+            connect(addAction, &QAction::triggered, this, [this]() {
+                QString filePath = QFileDialog:: getOpenFileName(this,tr("Select Video File"),"",tr("MP4 Files (*.MP4 *.mkv *.avi, *.mov)"));
+                if(!filePath.isEmpty())
+                {
+                    addToTable(filePath);
+                }
+            });
+        }
     } else {
 
-        if (this->title == "Playlist") {
+        if (this->title != "Media Library") {
             QAction* copyAction = contextMenu.addAction(tr("Copier dans Media Library"));
             connect(copyAction, &QAction::triggered, this, [this, item]() {
                 emit copyItemToMediaLibrary(item);
@@ -116,13 +126,22 @@ void CustomTable::addToTable(const QString &filePath)
 {
     QFileInfo fileInfo(filePath);
     QString title = fileInfo.completeBaseName();
+    QString fileExtension = fileInfo.suffix().toLower();
 
     int currentRow = this->tableWidget->rowCount();
     this->tableWidget->insertRow(currentRow);
 
     this->tableWidget->setItem(currentRow, 0, new QTableWidgetItem(title));
     this->tableWidget->setItem(currentRow, 1, new QTableWidgetItem("Author"));
-    this->tableWidget->setItem(currentRow, 2, new QTableWidgetItem("--:--"));
+
+    if(fileExtension == "jpg" || fileExtension == "png")
+    {
+        this->tableWidget->setItem(currentRow, 2, new QTableWidgetItem("00:10"));
+    }
+    else
+    {
+        this->tableWidget->setItem(currentRow, 2, new QTableWidgetItem("--:--"));
+    }
 
     this->videoPathMap->insert(title, filePath);
 
@@ -190,6 +209,34 @@ void CustomTable::loadFromJSON(const QString &filename) {
 
     for (auto it = json.constBegin(); it != json.constEnd(); ++it) {
         addToTable(it.value().toString());
+    }
+}
+
+void CustomTable::setupEventFilter() {
+    tableWidget->viewport()->installEventFilter(this);
+}
+
+bool CustomTable::eventFilter(QObject *watched, QEvent *event) {
+    if (watched == tableWidget->viewport() && event->type() == QEvent::MouseButtonPress) {
+        auto *mouseEvent = static_cast<QMouseEvent *>(event);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            QPoint pos = mouseEvent->pos();
+            if (!tableWidget->itemAt(pos)) {
+                tableWidget->clearSelection();
+            }
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+void CustomTable::loadVideosFromFolder() {
+    QString videosFolderPath = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
+    QDir videosFolder(videosFolderPath);
+    QStringList videoFiles = videosFolder.entryList(QStringList() << "*.mp4" << "*.mkv" << "*.avi" << "*.mov", QDir::Files);
+
+    foreach (const QString &videoFile, videoFiles) {
+        QString filePath = videosFolder.absoluteFilePath(videoFile);
+        addToTable(filePath);
     }
 }
 

@@ -33,14 +33,17 @@ public:
     QVideoWidget *videoWidget;
     CustomTable *playlistWidget, *mediaLibraryWidget, *myVideosWidget, *musicWidget;
 
+    void convertImageToVideo(const QString &imagePath, const QString &videoPath);
+
 private slots:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     void playVideo(QString filePath);
+    void copyItemToMediaLibraryFromPlaylist(QTableWidgetItem *item);
+    void copyItemToMediaLibraryFromMyVideos(QTableWidgetItem *item);
 
 private:
     void showPlaylistContextMenu(const QPoint &pos);
-    void copyItemToMediaLibrary(QTableWidgetItem *item);
     QMap<QString, QString> videoPathMap;
 
 protected:

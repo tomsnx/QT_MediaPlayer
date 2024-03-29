@@ -32,6 +32,8 @@ public:
     void saveToJSON(const QString &filename);
     void loadFromJSON(const QString &filename);
     void addToTable(const QString &filePath);
+    void setupEventFilter();
+    bool eventFilter(QObject *watched, QEvent *event);
 
     ~CustomTable();
 
@@ -39,6 +41,8 @@ private:
     QLabel *topBar;
     QVBoxLayout *layout;
     QString title;
+
+    void loadVideosFromFolder();
 
 private slots:
     void onItemDoubleClicked(QTableWidgetItem *item);

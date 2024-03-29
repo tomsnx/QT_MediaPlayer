@@ -73,14 +73,33 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::playVideo(const QString &filePath) {
-    player->setSource(QUrl::fromLocalFile(filePath));
-    videoArea->showVideo(true);
-    sideBar->setVisible(false);
+    QFileInfo fileInfo(filePath);
+    QString fileExtension = fileInfo.suffix().toLower();
 
-    player->play();
-    isPlaying = true;
+    videoArea->myVideosWidget->hide();
+    videoArea->musicWidget->hide();
+    videoArea->playlistWidget->hide();
+    videoArea->mediaLibraryWidget->hide();
+    videoArea->dropMessageLabel->hide();
 
-    playerBar->updatePlayerButton(&isPlaying);
+
+    if (fileExtension == "mp3") {
+        videoArea->videoWidget->hide();
+        videoArea->playlistWidget->show();
+        player->setSource(QUrl::fromLocalFile(filePath));
+        player->play();
+        isPlaying = true;
+        playerBar->updatePlayerButton(&isPlaying);
+    } else if (fileExtension == "jpg" || fileExtension == "png") {
+
+    } else {
+        player->setSource(QUrl::fromLocalFile(filePath));
+        videoArea->showVideo(true);
+        sideBar->setVisible(false);
+        player->play();
+        isPlaying = true;
+        playerBar->updatePlayerButton(&isPlaying);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -89,6 +108,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::handleFileDropped(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QString fileExtension = fileInfo.suffix().toLower();
+
+    if (fileExtension == "jpg" || fileExtension == "png") return;
     if (sideBar->getCurrentItemText() == "Playlist") {
         videoArea->playlistWidget->addToTable(filePath);
         playVideo(filePath);

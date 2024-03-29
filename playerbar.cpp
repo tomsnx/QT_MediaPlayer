@@ -26,6 +26,8 @@ PlayerBar::PlayerBar(int height, QMediaPlayer *player, VideoArea *VideoArea, Sid
 
     this->initLayouts();
 
+    connect(this->player, &QMediaPlayer::mediaStatusChanged, this, &PlayerBar::handleMediaPlayerStatusChanged);
+
     setLayout(globalLayout);
 }
 
@@ -225,18 +227,45 @@ void PlayerBar::updatePlayerButton(bool *isPlaying)
 
 void PlayerBar::initPlayPauseButton()
 {
-    QObject::disconnect(playPauseButton, &QPushButton::clicked, this, nullptr);
-    QObject::connect(playPauseButton, &QPushButton::clicked, this, [this]() {
-        QString filePath = QFileDialog:: getOpenFileName(this,tr("Select Video File"),"",tr("MP4 Files (*.MP4 *.mkv *.avi)")) ;
-        if (!filePath.isEmpty()) {
-            player->setSource(QUrl::fromLocalFile(filePath));
-            videoArea->showVideo(true);
-            sideBar->hide();
-            player->play();
-            *isPlaying = true;
-            updatePlayerButton(isPlaying);
-            videoArea->playlistWidget->addToTable(filePath);
+    playPauseButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+
+    playPauseButton->disconnect();
+    playPauseButton->connect(playPauseButton, &QPushButton::clicked, this, [this]() {
+        if (*isPlaying) {
+            player->pause();
+            *isPlaying = false;
+        } else {
+            CustomTable* currentTable = getCurrentTableWidget();
+            if (currentTable != nullptr) {
+                QList<QTableWidgetItem*> selectedItems = currentTable->tableWidget->selectedItems();
+                if (!selectedItems.isEmpty()) {
+                    // Si une ligne est sélectionnée, obtenez le chemin du fichier et jouez-le.
+                    int row = currentTable->tableWidget->row(selectedItems.first());
+                    QString title = currentTable->tableWidget->item(row, 0)->text();
+                    QString filePath = currentTable->videoPathMap->value(title);
+                    if (!filePath.isEmpty()) {
+                        player->setSource(QUrl::fromLocalFile(filePath));
+                        videoArea->showVideo(true);
+                        sideBar->hide();
+                        player->play();
+                        *isPlaying = true;
+                    }
+                } else {
+                    // Si aucune ligne n'est sélectionnée, ouvrez le dialogue de sélection de fichier.
+                    QString filePath = QFileDialog::getOpenFileName(this, tr("Select Video File"), "", tr("Video Files (*.mp4 *.mkv *.avi *.mov)"));
+                    if (!filePath.isEmpty()) {
+                        player->setSource(QUrl::fromLocalFile(filePath));
+                        videoArea->showVideo(true);
+                        sideBar->hide();
+                        player->play();
+                        *isPlaying = true;
+                        // Ajoutez la vidéo à la table courante si nécessaire.
+                        currentTable->addToTable(filePath);
+                    }
+                }
+            }
         }
+        updatePlayerButton(isPlaying);
     });
 }
 
@@ -360,5 +389,35 @@ CustomTable* PlayerBar::getCurrentTableWidget() {
     else
     {
         return nullptr;
+    }
+}
+
+void PlayerBar::handleMediaPlayerStatusChanged(QMediaPlayer::MediaStatus status) {
+    if (status == QMediaPlayer::EndOfMedia) {
+        videoArea->videoWidget->hide();
+        videoArea->playlistWidget->hide();
+        videoArea->mediaLibraryWidget->hide();
+        videoArea->myVideosWidget->hide();
+
+        if (sideBar->getCurrentItemText() == "Playlist") {
+            videoArea->playlistWidget->show();
+        }
+        else if (sideBar->getCurrentItemText() == "Media library")
+        {
+            videoArea->mediaLibraryWidget->show();
+        }
+        else if (sideBar->getCurrentItemText() == "My Videos")
+        {
+            videoArea->myVideosWidget->show();
+        }
+
+        player->stop();
+        *isPlaying = false;
+        initPlayPauseButton();
+        progressSlider->setEnabled(false);
+        totalTimeLabel->setText("00:00");
+        stopButton->setEnabled(false);
+
+        sideBar->show();
     }
 }
