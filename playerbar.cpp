@@ -66,7 +66,28 @@ void PlayerBar::initPlayerButtons(QSize &buttonsSize)
         isStoped = !isStoped;
         player->stop();
         videoArea->videoWidget->hide();
-        videoArea->playlistWidget->show();
+        videoArea->playlistWidget->hide();
+        videoArea->mediaLibraryWidget->hide();
+        videoArea->myVideosWidget->hide();
+        videoArea->musicWidget->hide();
+
+        if(getCurrentTableWidget() == videoArea->playlistWidget)
+        {
+            videoArea->playlistWidget->show();
+        }
+        else if (getCurrentTableWidget() == videoArea->mediaLibraryWidget)
+        {
+            videoArea->mediaLibraryWidget->show();
+        }
+        else if (getCurrentTableWidget() == videoArea->myVideosWidget)
+        {
+            videoArea->myVideosWidget->show();
+        }
+        else
+        {
+            videoArea->musicWidget->show();
+        }
+
         sideBar->setVisible(true);
         updatePlayerButton(isPlaying);
         progressSlider->setEnabled(false);
@@ -318,4 +339,26 @@ void PlayerBar::initStyles() {
             border-radius: 3px;
         }
     )");
+}
+
+CustomTable* PlayerBar::getCurrentTableWidget() {
+    if (sideBar->getCurrentItemText() == "Playlist")
+    {
+        return videoArea->playlistWidget;
+    }
+    else if (sideBar->getCurrentItemText() == "Media Library")
+    {
+        return videoArea->mediaLibraryWidget;
+    } else if (sideBar->getCurrentItemText() == "My Videos")
+    {
+        return videoArea->myVideosWidget;
+    }
+    else if (sideBar->getCurrentItemText() == "My Music")
+    {
+        return videoArea->musicWidget;
+    }
+    else
+    {
+        return nullptr;
+    }
 }

@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // on puisse le réouvrir.
 
     connect(videoArea, &VideoArea::itemClicked, this, &MainWindow::playVideo);
-    connect(videoArea, &VideoArea::fileDropped, this, &MainWindow::playVideo);
+    connect(videoArea, &VideoArea::fileDroppedInArea, this, &MainWindow::handleFileDropped);
 
     qApp->setStyleSheet(R"(
         QSplitter::handle {
@@ -86,4 +86,13 @@ void MainWindow::playVideo(const QString &filePath) {
 void MainWindow::closeEvent(QCloseEvent *event) {
     videoArea->mediaLibraryWidget->saveToJSON("mediaLibrary.json");
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::handleFileDropped(const QString& filePath) {
+    if (sideBar->getCurrentItemText() == "Playlist") {
+        videoArea->playlistWidget->addToTable(filePath);
+        playVideo(filePath);
+    } else if (sideBar->getCurrentItemText() == "Media Library") {
+        videoArea->mediaLibraryWidget->addToTable(filePath);
+    }
 }

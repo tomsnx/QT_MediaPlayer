@@ -59,6 +59,8 @@ private:
     void setupBarLook(int height);
     void setupAudio();
     void setupPlayerInteractions();
+
+    CustomTable* getCurrentTableWidget();
 };
 
 #endif // PLAYERBAR_H

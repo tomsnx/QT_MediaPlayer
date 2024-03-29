@@ -96,14 +96,12 @@ SideBar::SideBar(VideoArea *videoArea, QWidget *parent) : QWidget(parent) {
 void SideBar::handleSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous) {
     Q_UNUSED(previous)
 
-    // Cachez tous les widgets pour commencer
     videoArea->playlistWidget->hide();
     videoArea->mediaLibraryWidget->hide();
     videoArea->dropMessageLabel->hide();
     videoArea->myVideosWidget->hide();
     videoArea->musicWidget->hide();
 
-    // Affichez le widget approprié en fonction de l'élément sélectionné
     if (current->text() == "Playlist") {
         if (videoArea->playlistWidget->tableWidget->rowCount() == 0) {
             videoArea->dropMessageLabel->show();
@@ -119,5 +117,13 @@ void SideBar::handleSelectionChanged(QListWidgetItem *current, QListWidgetItem *
     else {
         videoArea->musicWidget->show();
     }
-    // Ajoutez des conditions supplémentaires pour les autres éléments si nécessaire
+}
+
+QString SideBar::getCurrentItemText() const
+{
+    if (listWidget->currentItem())
+    {
+        return listWidget->currentItem()->text();
+    }
+    return QString();
 }

@@ -21,7 +21,7 @@ class VideoArea : public QWidget {
     Q_OBJECT
 
 signals:
-    void fileDropped(const QString &filePath);
+    void fileDroppedInArea(const QString &filePath);
     void itemClicked(const QString &filePath);
 
 public:

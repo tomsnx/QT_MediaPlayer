@@ -67,6 +67,7 @@ private:
     void onPreviousButtonClicked();
     void onProgressSliderMoved(int position);
 
+    void handleFileDropped(const QString& filePath);
     void playVideo(const QString &filePath);
 
     SideBar *sideBar;

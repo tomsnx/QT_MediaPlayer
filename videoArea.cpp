@@ -59,8 +59,7 @@ void VideoArea::dropEvent(QDropEvent *event) {
             if (!urlList.isEmpty()) {
                 filePath = urlList.first().toLocalFile();
                 if (!filePath.isEmpty()) {
-                    playlistWidget->addToTable(filePath);
-                    emit fileDropped(filePath);
+                    emit fileDroppedInArea(filePath);
                 }
             }
         }
@@ -76,6 +75,9 @@ void VideoArea::showVideo(bool var) {
         dropMessageLabel->hide();
         videoWidget->show();
         playlistWidget->hide();
+        mediaLibraryWidget->hide();
+        myVideosWidget->hide();
+        musicWidget->hide();
     }
     else {
         videoWidget->hide();

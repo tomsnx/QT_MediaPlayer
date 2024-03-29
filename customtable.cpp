@@ -10,6 +10,8 @@ CustomTable::CustomTable(const QString &title, QWidget *parent) : QWidget(parent
                           "padding-left: 2px");
     topBar->setFixedHeight(25);
 
+    setAcceptDrops(false);
+
     tableWidget = new QTableWidget();
     tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -186,10 +188,7 @@ void CustomTable::loadFromJSON(const QString &filename) {
     QJsonObject json = QJsonDocument::fromJson(file.readAll()).object();
     file.close();
 
-    // À ce stade, vous devrez nettoyer la liste actuelle si nécessaire,
-    // et puis parcourir le json pour ajouter des éléments à votre liste/table
     for (auto it = json.constBegin(); it != json.constEnd(); ++it) {
-        // Utilisez it.key() et it.value().toString() pour récupérer vos données et les ajouter à votre tableau
         addToTable(it.value().toString());
     }
 }
