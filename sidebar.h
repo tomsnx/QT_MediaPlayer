@@ -22,6 +22,8 @@ class SideBar : public QWidget {
 public:
     explicit SideBar(VideoArea *videoArea, QWidget *parent = nullptr);
 
+    QString getCurrentItemText() const;
+
 private slots:
     void handleSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
 

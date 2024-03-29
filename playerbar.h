@@ -20,6 +20,9 @@ public:
 
     void updatePlayerButton(bool *isPLaying);
 
+private slots:
+    void handleMediaPlayerStatusChanged(QMediaPlayer::MediaStatus status);
+
 private:
     int height;
     QHBoxLayout *globalLayout, *progressLayout, *playerLayout, *playButtonLayout, *soundLayout;
